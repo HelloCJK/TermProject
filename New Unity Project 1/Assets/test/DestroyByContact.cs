@@ -35,11 +35,15 @@ public class DestroyByContact : MonoBehaviour {
         {
             Instantiate(playerExplosion, transform.position, transform.rotation);
             gameController.SetGameOver();
+            gameController.SetScoreBoard();
             gameController.SetRestart();
         }
         Destroy(other.gameObject);
-        gameController.AddScore(Score);
-        cnt++;
+        if (other.gameObject.tag != "Player")
+        {
+            gameController.AddScore(Score);
+            cnt++;
+        }
         if (cnt >= howMuchAttack)
         {
             astroidDestroy.Play();

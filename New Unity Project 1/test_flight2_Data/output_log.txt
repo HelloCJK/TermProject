@@ -16,20 +16,26 @@ Platform assembly: D:\Unity3D_M\New Unity Project 1\test_flight2_Data\Managed\Un
 Loading D:\Unity3D_M\New Unity Project 1\test_flight2_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
 Platform assembly: D:\Unity3D_M\New Unity Project 1\test_flight2_Data\Managed\UnityEngine.Analytics.dll (this message is harmless)
 Loading D:\Unity3D_M\New Unity Project 1\test_flight2_Data\Managed\UnityEngine.Analytics.dll into Unity Child Domain
-- Completed reload, in  0.087 seconds
+- Completed reload, in  0.340 seconds
 Platform assembly: D:\Unity3D_M\New Unity Project 1\test_flight2_Data\Managed\System.Core.dll (this message is harmless)
 Platform assembly: D:\Unity3D_M\New Unity Project 1\test_flight2_Data\Managed\System.dll (this message is harmless)
 desktop: 1920x1080 60Hz; virtual: 1920x1080 at 0,0
 <RI> Initializing input.
 <RI> Input initialized.
 <RI> Initialized touch support.
-UnloadTime: 0.904691 ms
+UnloadTime: 2.967699 ms
 Unloading 4 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 0.706765 ms
+UnloadTime: 0.996739 ms
 
 Unloading 2 unused Assets to reduce memory usage. Loaded Objects now: 357.
-Total: 0.220049 ms (FindLiveObjects: 0.020148 ms CreateObjectMapping: 0.013432 ms MarkObjects: 0.153284 ms  DeleteObjects: 0.003950 ms)
+Total: 0.457480 ms (FindLiveObjects: 0.043851 ms CreateObjectMapping: 0.051753 ms MarkObjects: 0.316839 ms  DeleteObjects: 0.011061 ms)
+
+Unloading 3 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 0.978566 ms
+
+Unloading 1 unused Assets to reduce memory usage. Loaded Objects now: 357.
+Total: 0.504493 ms (FindLiveObjects: 0.085728 ms CreateObjectMapping: 0.040691 ms MarkObjects: 0.364641 ms  DeleteObjects: 0.011456 ms)
 
 Setting up 2 worker threads for Enlighten.
-  Thread -> id: 1784 -> priority: 1 
-  Thread -> id: 17a8 -> priority: 1 
+  Thread -> id: 1e5c -> priority: 1 
+  Thread -> id: 2ee0 -> priority: 1 

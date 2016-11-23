@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.SceneManagement;
+using System.IO;
 
 public class GameController : MonoBehaviour {
 
@@ -14,6 +15,7 @@ public class GameController : MonoBehaviour {
     public GUIText DistanceText;
     public GUIText RestartText;
     public GUIText GameOverText;
+    public GUIText GameOverText1;
 
     private int score;
     private int distance;
@@ -30,6 +32,7 @@ public class GameController : MonoBehaviour {
         gameOver = false;
         RestartText.text = "";
         GameOverText.text = "";
+        GameOverText1.text = "";
         gameLevel = 0;
         SetScore();
         Cursor.lockState = CursorLockMode.Locked;
@@ -97,7 +100,40 @@ public class GameController : MonoBehaviour {
     }
     public void SetGameOver()
     {
-        GameOverText.text = "Game Over";
+        GameOverText1.text = "Game Over";
         gameOver = true;
+    }
+    public void SetScoreBoard()
+    {
+        //System.Threading.Thread.Sleep(5000);
+        string path = @"D:\Unity3D_M\test.txt";
+        string s;
+        string[] str = new string[1024];
+        int[] score_F = new int[1024];
+        int index = 0;
+
+        GameOverText.text = "";
+
+        using(StreamWriter sw = File.AppendText(path))
+        {
+            sw.WriteLine("a " + score);
+        }
+
+        using (StreamReader sr = File.OpenText(path))
+        {
+            while ((s = sr.ReadLine()) != null)
+            {
+                string[] sTmp = s.Split(' ');
+                str[index] = sTmp[0];
+                if (sTmp[1] != null)
+                    score_F[index++] = int.Parse(sTmp[1]);
+            }
+        }
+        System.Array.Sort(score_F);
+        System.Array.Reverse(score_F);
+        for(int i = 0; i < index && i < 10; i++)
+        {
+            GameOverText.text += (i + 1) + ". " + score_F[i] + "\n";
+        }
     }
 }
