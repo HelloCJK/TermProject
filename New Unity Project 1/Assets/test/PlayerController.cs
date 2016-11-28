@@ -3,7 +3,7 @@ using System.Collections;
 
 [System.Serializable]
 public class Boundary{
-    public float xMin, xMax, zMin, zMax;
+    public float xMin, xMax, yMin, yMax;
 }
 
 public class PlayerController : MonoBehaviour {
@@ -45,13 +45,13 @@ public class PlayerController : MonoBehaviour {
         float moveHorizontal = Input.GetAxis("Mouse X");
         float moveVertical = Input.GetAxis("Mouse Y");
 
-        rb.velocity = new Vector3(moveHorizontal, 0,moveVertical) * speed;
+        rb.velocity = new Vector3(moveHorizontal, moveVertical, 0) * speed;
         rb.position = new Vector3(
             Mathf.Clamp(rb.position.x, boundary.xMin, boundary.xMax)
+            , Mathf.Clamp(rb.position.y, boundary.yMin, boundary.yMax)
             , 0
-            , Mathf.Clamp(rb.position.z, boundary.zMin, boundary.zMax)
         );
 
-        rb.rotation = Quaternion.Euler(0,0, (-1) * rb.velocity.x * tilt);
-   }
+        rb.rotation = Quaternion.Euler(0, 0, (-1) * rb.velocity.x * tilt);
+    }
 }

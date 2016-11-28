@@ -80,6 +80,7 @@
     <Compile Include="Assets\test\DestroyByTime.cs" />
     <Compile Include="Assets\test\Destroy_By_Boundary.cs" />
     <Compile Include="Assets\test\GameController.cs" />
+    <Compile Include="Assets\test\LazerRotation.cs" />
     <Compile Include="Assets\test\Mover.cs" />
     <Compile Include="Assets\test\PlayerController.cs" />
     <Compile Include="Assets\test\RandomRotation.cs" />
