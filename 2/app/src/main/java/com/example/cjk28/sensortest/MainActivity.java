@@ -23,6 +23,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     final static String TAG = "SensorTest";
 
     double xAngle_gyr = 0,yAngle_gyr = 0,zAngle_gyr = 0;
+    double xAngle_acc = 0;
+    double yAngle_acc = 0;
+    double zAngle_acc = 0;
+
+    double xAngle = 0, yAngle = 0, zAngle = 0;
+
+    boolean isAcc = false, isGyr = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,19 +60,31 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 Log.d(TAG,str);
                 tv_test.setText(str);
 
-                double xAngle_acc = Math.atan(getY/getZ) * 180 / Math.PI;
-                double yAngle_acc = Math.atan(getX/getZ) * 180 / Math.PI;
-                double zAngle_acc = Math.atan(getX/getY) * 180 / Math.PI;
+                xAngle_acc = Math.atan(getY/getZ) * 180 / Math.PI;
+                yAngle_acc = Math.atan(getX/getZ) * 180 / Math.PI;
+                zAngle_acc = Math.atan(getX/getY) * 180 / Math.PI;
+
+                isAcc = true;
 
                 break;
 
             case Sensor.TYPE_GYROSCOPE:
-                getX_gyro += event.values[0]/1.5 * 90 * 0.02;    getY_gyro += event.values[1]/1.5 * 90 * 0.02;    getZ_gyro += event.values[2]/1.5 * 90 * 0.02;
+                getX_gyro += event.values[0]*180/Math.PI * 0.0215;    getY_gyro += event.values[1]*180/Math.PI * 0.0215;    getZ_gyro += event.values[2]*180/Math.PI * 0.0215;
                 str = "GYROSCOPE: X: "+String.valueOf(getX_gyro) + " " + "Y: "+String.valueOf(getY_gyro) + " " + "Z: "+String.valueOf(getZ_gyro);
                 Log.d(TAG,str);
                 tv_test.setText(str);
 
+                isGyr = true;
+
                 break;
+        }
+        if(isGyr && isAcc){
+            isGyr = isAcc = false;
+            xAngle =  ( 0.95 * (xAngle + (getX_gyro))) + (0.05 * xAngle_acc);
+            yAngle =  ( 0.95 * (yAngle + (getY_gyro))) + (0.05 * yAngle_acc);
+            zAngle =  ( 0.95 * (zAngle + (getZ_gyro))) + (0.05 * zAngle_acc);
+            str = "Filter: X: " + String.valueOf(xAngle) + " Y: " + String.valueOf(yAngle) + " Z: " + String.valueOf(zAngle);
+            Log.d(TAG,str);
         }
     }
 
