@@ -45,6 +45,10 @@ public class GameController : MonoBehaviour {
 
     void Update()
     {
+        if (Application.platform == RuntimePlatform.Android)
+            if (Input.GetKey(KeyCode.Escape))
+                Application.Quit();
+
         if (Time.time > nextSpawn   && !gameOver)
         {
             SpawnWave();
@@ -52,7 +56,8 @@ public class GameController : MonoBehaviour {
             AddDistance(1);
             nextSpawn = Time.time + spawnRate;
         }
-        if ((Input.GetKeyDown(KeyCode.Mouse1) && restart)|| Input.GetKeyDown(KeyCode.R))
+        
+        if ((Input.GetKeyDown(KeyCode.Mouse1) && restart)|| Input.GetKeyDown(KeyCode.R) || (Input.GetTouch(0).phase == TouchPhase.Began && restart))
         {
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
@@ -98,13 +103,15 @@ public class GameController : MonoBehaviour {
 
     public void SetRestart()
     {
-        RestartText.text = "Press 'R' to restart";
-        restart = true;
+        RestartText.text = "Press TOUCH to restart";
+        StartCoroutine(RestartDelay());
+        //restart = true;
     }
     public void SetGameOver()
     {
         GameOverText1.text = "Game Over";
-        gameOver = true;
+        StartCoroutine(GameOverDelay());
+        //gameOver = true;
     }
 
     public struct ScoreBoardText
@@ -116,7 +123,8 @@ public class GameController : MonoBehaviour {
     public void SetScoreBoard()
     {
         //System.Threading.Thread.Sleep(5000);
-        string path = @"D:\Unity3D_M\test.txt";
+        //string path = @"D:\Unity3D_M\test.txt";
+        string path = Application.persistentDataPath + "/Ranking.dat";
         string s;
         ScoreBoardText[] sbText = new ScoreBoardText[20];
         int index = 0;
@@ -174,5 +182,15 @@ public class GameController : MonoBehaviour {
         }
 
         return sbText;
+    }
+    IEnumerator GameOverDelay()
+    {
+        yield return new WaitForSeconds(1.0f);
+        gameOver = true;
+    }
+    IEnumerator RestartDelay()
+    {
+        yield return new WaitForSeconds(1.0f);
+        restart = true;
     }
 }
