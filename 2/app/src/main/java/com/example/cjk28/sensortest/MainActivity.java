@@ -13,23 +13,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     SensorManager mSensorManager;
     Sensor mSensorAcce;
-    Sensor mSensorGyro;
 
     TextView tv_test;
 
     private float getX, getY, getZ;
-    private float getX_gyro = 0, getY_gyro = 0, getZ_gyro= 0 ;
+
+    public KalmanFilter mKalmanFilterX;
+    public KalmanFilter mKalmanFilterY;
+    public KalmanFilter mKalmanFilterZ;
 
     final static String TAG = "SensorTest";
-
-    double xAngle_gyr = 0,yAngle_gyr = 0,zAngle_gyr = 0;
-    double xAngle_acc = 0;
-    double yAngle_acc = 0;
-    double zAngle_acc = 0;
-
-    double xAngle = 0, yAngle = 0, zAngle = 0;
-
-    boolean isAcc = false, isGyr = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,56 +33,64 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         mSensorAcce = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        mSensorGyro = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+
+        mKalmanFilterX = new KalmanFilter(0.0f);
+        mKalmanFilterY = new KalmanFilter(0.0f);
+        mKalmanFilterZ = new KalmanFilter(0.0f);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_GAME);
-        mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_GAME);
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
         String str = "";
-        switch(event.sensor.getType()){
+        switch(event.sensor.getType()) {
             case Sensor.TYPE_ACCELEROMETER:
-                getX = event.values[0];    getY = event.values[1];    getZ = event.values[2];
-                str = "ACCELEROMETER X: "+String.valueOf(getX) + " " + "Y: "+String.valueOf(getY) + " " + "Z: "+String.valueOf(getZ);
-                Log.d(TAG,str);
+                getX = event.values[0];
+                getY = event.values[1];
+                getZ = event.values[2];
+                str = "ACCELEROMETER(no Filter) X: " + String.valueOf(getX) + " " + "Y: " + String.valueOf(getY) + " " + "Z: " + String.valueOf(getZ);
+                Log.d(TAG, str);
+
+                float filteredX = (float) mKalmanFilterX.Update((double) getX);
+                float filteredY = (float) mKalmanFilterY.Update((double) getY);
+                float filteredZ = (float) mKalmanFilterZ.Update((double) getZ);
+
+                str = "ACCELEROMETER(Filter) X: " + String.valueOf(filteredX) + " " + "Y: " + String.valueOf(filteredY) + " " + "Z: " + String.valueOf(filteredZ);
+                Log.d(TAG, str);
                 tv_test.setText(str);
-
-                xAngle_acc = Math.atan(getY/getZ) * 180 / Math.PI;
-                yAngle_acc = Math.atan(getX/getZ) * 180 / Math.PI;
-                zAngle_acc = Math.atan(getX/getY) * 180 / Math.PI;
-
-                isAcc = true;
-
                 break;
-
-            case Sensor.TYPE_GYROSCOPE:
-                getX_gyro += event.values[0]*180/Math.PI * 0.0215;    getY_gyro += event.values[1]*180/Math.PI * 0.0215;    getZ_gyro += event.values[2]*180/Math.PI * 0.0215;
-                str = "GYROSCOPE: X: "+String.valueOf(getX_gyro) + " " + "Y: "+String.valueOf(getY_gyro) + " " + "Z: "+String.valueOf(getZ_gyro);
-                Log.d(TAG,str);
-                tv_test.setText(str);
-
-                isGyr = true;
-
-                break;
-        }
-        if(isGyr && isAcc){
-            isGyr = isAcc = false;
-            xAngle =  ( 0.95 * (xAngle + (getX_gyro))) + (0.05 * xAngle_acc);
-            yAngle =  ( 0.95 * (yAngle + (getY_gyro))) + (0.05 * yAngle_acc);
-            zAngle =  ( 0.95 * (zAngle + (getZ_gyro))) + (0.05 * zAngle_acc);
-            str = "Filter: X: " + String.valueOf(xAngle) + " Y: " + String.valueOf(yAngle) + " Z: " + String.valueOf(zAngle);
-            Log.d(TAG,str);
         }
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
+    }
+
+    public class KalmanFilter{
+        private double Q = 0.00001;
+        private double R = 0.001;
+        private double X = 0, P = 1, K;
+
+        KalmanFilter(double initVal){
+            X = initVal;
+        }
+
+        private void measurementUpdate(){
+            K = (P + Q)/(P + Q + R);
+            P = R * (P+Q)/(R+P+Q);
+        }
+
+        public double Update(double measurement){
+            measurementUpdate();
+            X = X + (measurement - X) * K;
+
+            return X;
+        }
     }
 }
