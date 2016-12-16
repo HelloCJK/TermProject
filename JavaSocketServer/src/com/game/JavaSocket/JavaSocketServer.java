@@ -48,23 +48,25 @@ public class JavaSocketServer implements Runnable {
 						char[] buf = new char[1024];
 
 						br.read(buf, 0, 1024);
-						if(buf==null) break;
+						if (buf == null)
+							break;
 						String recive = String.valueOf(buf);
 						System.out.println(getTime() + " 클라이언트로부터 받은 문자열 : " + recive);
-						if (recive == "s") {
-							System.out.println(getTime()+"저장중입니다.");
+						if (buf[0] == 's') {
+							System.out.println(getTime() + "저장중입니다.");
 							br.read(buf, 0, 1024);
 							String data = String.valueOf(buf);
 							writeFile(data);
-							System.out.println(getTime()+"저장완료.");
+							System.out.println(getTime() + "저장완료.");
 						}
-						if (recive == "l"){
-							System.out.println(getTime()+"데이터를 저장합니다.");
+						if (buf[0] == 'l') {
+							System.out.println(getTime() + "데이터를 전송합니다.");
 							buf = stringFile().toCharArray();
 							pw.write(buf, 0, 1024);
 							pw.flush(); // 버퍼를 비움
-						}						
-						
+							System.out.println(getTime() + "데이터를 전송완료.");
+						}
+
 					}
 				} catch (Exception e) {
 					System.out.println(getTime() + " Error");
