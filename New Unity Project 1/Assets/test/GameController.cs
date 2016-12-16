@@ -2,6 +2,10 @@
 using System.Collections;
 using UnityEngine.SceneManagement;
 using System.IO;
+using System;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
 
 public class GameController : MonoBehaviour {
 
@@ -18,12 +22,14 @@ public class GameController : MonoBehaviour {
     public GUIText GameOverText;
     public GUIText GameOverText1;
     public GUIText SCB;
+    public GUIText MyScore;
 
     private int score;
     private int distance;
     private bool restart;
     private bool gameOver;
 
+    public string score_txt = "";
     private int gameLevel = 0;
 
     // Use this for initialization
@@ -36,6 +42,7 @@ public class GameController : MonoBehaviour {
         GameOverText.text = "";
         GameOverText1.text = "";
         SCB.text = "";
+        MyScore.text = "";
         gameLevel = 0;
         SetScore();
         Cursor.lockState = CursorLockMode.Locked;
@@ -45,6 +52,10 @@ public class GameController : MonoBehaviour {
 
     void Update()
     {
+        if (Application.platform == RuntimePlatform.Android)
+            if (Input.GetKey(KeyCode.Escape))
+                Application.Quit();
+
         if (Time.time > nextSpawn   && !gameOver)
         {
             SpawnWave();
@@ -52,7 +63,8 @@ public class GameController : MonoBehaviour {
             AddDistance(1);
             nextSpawn = Time.time + spawnRate;
         }
-        if ((Input.GetKeyDown(KeyCode.Mouse1) && restart)|| Input.GetKeyDown(KeyCode.R))
+        
+        if ((Input.GetKeyDown(KeyCode.Mouse1) && restart)|| Input.GetKeyDown(KeyCode.R) || (Input.GetTouch(0).phase == TouchPhase.Began && restart))
         {
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
@@ -65,8 +77,8 @@ public class GameController : MonoBehaviour {
     }
     void SpawnWave()
     {
-        int n = Random.Range(0,3);
-        Vector3 spawnPosition = new Vector3(Random.Range(spawnPos_Min.x, spawnPos_Max.x), Random.Range(spawnPos_Min.y, spawnPos_Max.y), spawnPos_Min.z);
+        int n = UnityEngine.Random.Range(0,3);
+        Vector3 spawnPosition = new Vector3(UnityEngine.Random.Range(spawnPos_Min.x, spawnPos_Max.x), UnityEngine.Random.Range(spawnPos_Min.y, spawnPos_Max.y), spawnPos_Min.z);
         Quaternion spawnRotation = Quaternion.identity;
 
         GameObject astroid = Instantiate(hazard[n], spawnPosition, spawnRotation) as GameObject;
@@ -98,13 +110,15 @@ public class GameController : MonoBehaviour {
 
     public void SetRestart()
     {
-        RestartText.text = "Press 'R' to restart";
-        restart = true;
+        RestartText.text = "Press TOUCH to restart";
+        StartCoroutine(RestartDelay());
+        //restart = true;
     }
     public void SetGameOver()
     {
         GameOverText1.text = "Game Over";
-        gameOver = true;
+        StartCoroutine(GameOverDelay());
+        //gameOver = true;
     }
 
     public struct ScoreBoardText
@@ -116,12 +130,13 @@ public class GameController : MonoBehaviour {
     public void SetScoreBoard()
     {
         //System.Threading.Thread.Sleep(5000);
-        string path = @"D:\Unity3D_M\test.txt";
+        //string path = @"D:\Unity3D_M\test.txt";
+        string path = Application.persistentDataPath + "/Ranking.dat";
         string s;
         ScoreBoardText[] sbText = new ScoreBoardText[20];
         int index = 0;
 
-        char[] name_tmp = { (char)Random.Range('A', 'Z'), (char)Random.Range('A', 'Z'), (char)Random.Range('A', 'Z') };
+        char[] name_tmp = { (char)UnityEngine.Random.Range('A', 'Z'), (char)UnityEngine.Random.Range('A', 'Z'), (char)UnityEngine.Random.Range('A', 'Z') };
         string name = new string(name_tmp);
 
         SCB.text = "ScoreBoard";
@@ -130,6 +145,7 @@ public class GameController : MonoBehaviour {
         using (StreamWriter sw = File.AppendText(path))
         {
             sw.WriteLine(name + " " + score);
+            MyScore.text="MyScore: "+score;
         }
 
         using (StreamReader sr = File.OpenText(path))
@@ -174,5 +190,132 @@ public class GameController : MonoBehaviour {
         }
 
         return sbText;
+    }
+    IEnumerator GameOverDelay()
+    {
+        yield return new WaitForSeconds(1.0f);
+        gameOver = true;
+    }
+    IEnumerator RestartDelay()
+    {
+        yield return new WaitForSeconds(1.0f);
+        restart = true;
+    }
+    public class StateObject
+    {
+        public Socket workSocket = null;
+        public const int BufferSize = 256;
+        public byte[] buffer = new byte[BufferSize];
+        public StringBuilder sb = new StringBuilder();
+    }
+
+    public class tcpClient
+    {
+        ManualResetEvent receiveDone = new ManualResetEvent(false);
+
+        [STAThread]
+        public static void MainTCPClient(int state, string send_txt)
+        {
+            //int port = 1500;
+            System.Net.Sockets.Socket socket = null;
+            string lineToBeSent = "";
+            try
+            {
+                System.Text.ASCIIEncoding encoding = new System.Text.ASCIIEncoding();
+
+                socket = new System.Net.Sockets.Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                System.Net.IPAddress ipAdd = System.Net.IPAddress.Parse("10.30.115.46");
+                System.Net.IPEndPoint remoteEP = new System.Net.IPEndPoint(ipAdd, 1500);
+
+                socket.Connect(remoteEP);
+                Receive(socket);
+                while (true)
+                {
+                    switch (state)
+                    {
+                        case 0:
+                            lineToBeSent = ".";
+                            break;
+                        case 1:
+                            lineToBeSent = "s";
+                            socket.Send(encoding.GetBytes(lineToBeSent));
+                            socket.Send(encoding.GetBytes(send_txt));
+                            break;
+                        case 2:
+                            lineToBeSent = "l";
+                            socket.Send(encoding.GetBytes(lineToBeSent));
+                            break;
+                        case 3:
+                            socket.Send(encoding.GetBytes(lineToBeSent));
+                            break;
+                    }
+
+                    //lineToBeSent = System.Console.ReadLine();
+                    
+                    if (lineToBeSent.Equals("."))
+                    {
+                        socket.Close();
+                        break;
+                    }
+                }
+            }
+            catch (System.IO.IOException e)
+            {
+                System.Console.Out.WriteLine(e);
+            }
+        }
+
+        private static void Receive(Socket client)
+        {
+            try
+            {
+                // Create the state object.
+                StateObject state = new StateObject();
+                state.workSocket = client;
+
+                // Begin receiving the data from the remote device.
+                client.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
+                    new AsyncCallback(ReceiveCallback), state);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+        }
+
+        static string response = "";
+        private static void ReceiveCallback(IAsyncResult ar)
+        {
+            try
+            {
+                StateObject state = (StateObject)ar.AsyncState;
+                Socket client = state.workSocket;
+                int bytesRead = client.EndReceive(ar);
+                if (bytesRead > 0)
+                {
+                    state.sb.Append(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
+                    if (state.sb.Length > 1)
+                    {
+                        response = Encoding.ASCII.GetString(state.buffer, 0, bytesRead).ToString();
+                        score_txt = response;
+                        //Console.WriteLine(response);
+                    }
+                    client.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
+                        new AsyncCallback(ReceiveCallback), state);
+                }
+                else
+                {
+                    if (state.sb.Length > 1)
+                    {
+                        response = state.sb.ToString();
+                        //Console.WriteLine(response);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+        }
     }
 }
